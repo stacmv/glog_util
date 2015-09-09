@@ -11,6 +11,6 @@
        "files": ["glog_util.php"]
     },
     "require": {
-		"php": "=>5.3"
+		"php": ">=5.3"
 	}
 }
