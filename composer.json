@@ -1,0 +1,16 @@
+{
+    "name": "optimit/glog_util",
+    "description": "Glog utility library",
+    "authors": [
+        {
+            "name": "Vyacheslav Matsnev",
+            "email": "stacmv@optimit.ru"
+        }
+    ],
+    "autoload": {
+       "files": ["glog_util.php"]
+    },
+    "require": {
+		"php": "=>5.3"
+	}
+}
