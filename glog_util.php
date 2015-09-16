@@ -1,6 +1,8 @@
 <?php
 define("LIBGLOGUTIL_VERSION", "0.18.0");
 
+define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
+
 function glog_get_log_levels(){
     
     return array(
@@ -307,7 +309,7 @@ function glog_get_num_with_unit($num, $unit1="", $unit2_4="",$unit5_9=""){    //
     
     return trim($num." ".$suf);
 }
-function glog_codify($str){                                         // Возвращает строку в виде, пригодном для использования в именах файлов, url, css-классах, ... .
+function glog_codify($str, $flags = 0){                                      // Возвращает строку в виде, пригодном для использования в именах файлов, url, css-классах, ... .
 	
     if ( ! is_string($str) ){
         glog_dosyslog(__FUNCTION__.get_callee().": ERROR: Parameter str should be string, ".gettype($str)." given.");
@@ -315,12 +317,17 @@ function glog_codify($str){                                         // Возв�
     
     $result = glog_translit($str);
     
-	$result = str_replace(array("+","&"," ",",",":",";",".",",","/","\\","(",")","'","\""),array("_plus_","_and_","-","-","-","-"),$result); 
+    if ($flags & GLOG_GET_FILENAME){
+        $result = str_replace(array("%", "!","?","+","&"," ",",",":",";",".",",","/","\\","(",")","'","\""),array("_percent", "_excl_", "_quest_", "_plus_","_and_","_","-","-","-"),$result); 
+        $result = strtolower($result);
+        $result = urlencode($result);
+        $result = str_replace("%", "_", $result);
+    }else{
+        $result = str_replace(array("+","&"," ",",",":",";",".",",","/","\\","(",")","'","\""),array("_plus_","_and_","-","-","-","-"),$result); 
+        $result = strtolower($result);
+        $result = str_replace("%","_prc_", urlencode($result));
+    };
     
-	$result = strtolower($result);
-    
-	$result = str_replace("%","_prc_", urlencode($result));
-	
 	return $result;
 };
 function glog_translit($s) {                                        //Возвращает транслитирированную строку.
