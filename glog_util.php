@@ -1,7 +1,8 @@
 <?php
-define("LIBGLOGUTIL_VERSION", "0.18.0");
+define("LIBGLOGUTIL_VERSION", "0.19.0");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
+if ( ! defined("GLOG_DEFAULT_LANG") ) define("GLOG_DEFAULT_LANG", "RU"); 
 
 function glog_get_log_levels(){
     
@@ -165,7 +166,7 @@ function glog_rusdate($date="", $withTime = false) {				/* Принимает д
         }
     }; 
 };
-function glog_weekday($day_no="", $short = false, $lang="RU"){                                 // Возвращает наименгование для недели по его номеру (0 - вс, 6 - сб )
+function glog_weekday($day_no="", $short = false, $lang = GLOG_DEFAULT_LANG){                                 // Возвращает наименгование для недели по его номеру (0 - вс, 6 - сб )
 
     $day_names = glog_weekdays($lang);
     
@@ -181,7 +182,7 @@ function glog_weekday($day_no="", $short = false, $lang="RU"){                  
     } 
     
 }
-function glog_weekdays($short = false, $lang="RU"){
+function glog_weekdays($short = false, $lang = GLOG_DEFAULT_LANG){
 
     if ( $short ) {
         return array(
@@ -563,6 +564,127 @@ function glog_render($template_file, array $data){
     return $HTML;	
 };
 
+function glog_str_from_num($int, $lang = GLOG_DEFAULT_LANG){  // Возвращает число прописью. ЭКСПЕРИМЕНТАЛЬНО: до 19999 и только по-русски.
+    
+    if ( ! is_int($int) ){
+        glog_dosyslog(__FUNCTION__.get_callee().": ERROR: Wrong parameter int:".$int.". Should be integer. Returned as is.");
+        return $int;
+    }
+    
+    if ($int > 19999){
+        glog_dosyslog(__FUNCTION__.get_callee().": ERROR: Function is experimental. Max number supported is 19999. ".int." given. Returned as is.");
+        return $int;
+    }
+    
+    
+    $num = strrev( (string) $int);
+    $len = strlen($num);
+    $str = "";
+    $tmp = array();
+    
+    for($i = 0; $i < $len; $i++){
+        
+        switch ($lang){
+        case "RU":
+        default:
+            
+            if (in_array($i, array(0, 3))){
+
+                if (isset($num[$i+1]) && ($num[$i+1] == 1)){
+                    switch($num[$i]){
+                    case"0": $tmp[$i] = "десять" ; break;
+                    case"1": $tmp[$i] = "одиннадцать"  ; break;
+                    case"2": $tmp[$i] = "двенадцать"   ; break;
+                    case"3": $tmp[$i] = "тринадцать"   ; break;
+                    case"4": $tmp[$i] = "четырнадцать"; break;
+                    case"5": $tmp[$i] = "пятнадцать"  ; break;
+                    case"6": $tmp[$i] = "шестнадцать" ; break;
+                    case"7": $tmp[$i] = "семнадцать"  ; break;
+                    case"8": $tmp[$i] = "восемнадцать"; break;
+                    case"9": $tmp[$i] = "девятнадцать"; break;
+                    };
+                }else{
+                    switch($num[$i]){
+                    case"0":
+                        if ($len == 1){
+                            $tmp[$i] = "ноль";
+                        }else{
+                            $tmp[$i] = "";
+                        };
+                        break;
+                    case"1": $tmp[$i] = "один"  ; break;
+                    case"2": $tmp[$i] = "два"   ; break;
+                    case"3": $tmp[$i] = "три"   ; break;
+                    case"4": $tmp[$i] = "четыре"; break;
+                    case"5": $tmp[$i] = "пять"  ; break;
+                    case"6": $tmp[$i] = "шесть" ; break;
+                    case"7": $tmp[$i] = "семь"  ; break;
+                    case"8": $tmp[$i] = "восемь"; break;
+                    case"9": $tmp[$i] = "девять"; break;
+                    };
+                }
+            };
+            if (in_array($i, array(1))){
+                switch($num[$i]){
+                case"0": $tmp[$i] = "";  break;
+                case"1": $tmp[$i] = "";  break;
+                case"2": $tmp[$i] = "двадцать"; break;
+                case"3": $tmp[$i] = "тридцать";  break;
+                case"4": $tmp[$i] = "сорок"; break;
+                case"5": $tmp[$i] = "пятьдесят"; break;
+                case"6": $tmp[$i] = "шестьдесят"; break;
+                case"7": $tmp[$i] = "семьдесят"; break;
+                case"8": $tmp[$i] = "восемьдесят"; break;
+                case"9": $tmp[$i] = "девяносто"; break;
+                };
+            };
+            if (in_array($i, array(2))){
+                switch($num[$i]){
+                case"0": $tmp[$i] = "";     break;
+                case"1": $tmp[$i] = "сто";  break;
+                case"2": $tmp[$i] = "двести";  break;
+                case"3": $tmp[$i] = "триста"; break;
+                case"4": $tmp[$i] = "четыреста"; break;
+                case"5": $tmp[$i] = "пятьсот"; break;
+                case"6": $tmp[$i] = "шестьсот"; break;
+                case"7": $tmp[$i] = "семьсот"; break;
+                case"8": $tmp[$i] = "восемьсот"; break;
+                case"9": $tmp[$i] = "девятьсот"; break;
+                };
+            };
+            if (in_array($i, array(3))){
+                if (isset($num[$i+1]) && ($num[$i+1] == 1)){
+                    $tmp[$i] .= " тысяч"; break;
+                }else{
+                    switch($num[$i]){
+                    case"0": $tmp[$i] = "";     break;
+                    case"1": $tmp[$i] = "одна тысяча";  break;
+                    case"2": $tmp[$i] = "две тысячи";  break;
+                    case"3": $tmp[$i] = "три тысячи"; break;
+                    case"4": $tmp[$i] = "четыре тысячи"; break;
+                    case"5": $tmp[$i] = "пять тысяч"; break;
+                    case"6": $tmp[$i] = "шесть тысяч"; break;
+                    case"7": $tmp[$i] = "семь тысяч"; break;
+                    case"8": $tmp[$i] = "восемь тысяч"; break;
+                    case"9": $tmp[$i] = "девять тысяч"; break;
+                    };
+                };
+            };
+
+            
+            
+        }
+    };
+    
+    switch($lang){
+    case "RU":
+    default:
+        $str = implode(" ", array_reverse($tmp));
+    }
+    
+    return $str;
+    
+}
 function glog_str_limit($str, $limit, $noHTML = false){  
     
     if ( ! $str ) return  "";
