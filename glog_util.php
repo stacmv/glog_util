@@ -1,5 +1,5 @@
 <?php
-define("LIBGLOGUTIL_VERSION", "0.19.0");
+define("LIBGLOGUTIL_VERSION", "0.19.1");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 if ( ! defined("GLOG_DEFAULT_LANG") ) define("GLOG_DEFAULT_LANG", "RU"); 
@@ -289,24 +289,28 @@ function glog_get_age_str($age){    // возвращает строку вид�
 }
 function glog_get_num_with_unit($num, $unit1="", $unit2_4="",$unit5_9=""){    // возвращает строку вида "n чего-нибудь"
     
-    switch (substr($num,-1,1)) {
-        case 1:
-            $suf = $unit1;
-            break;
-        case 2:
-        case 3:
-        case 4:
-            $suf = $unit2_4;
-            break;
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        default:
-            $suf = $unit5_9;
+    if ( ($num>=10) && ( substr($num,-1,2) == 1) ){
+        $suf = $unit5_9; // for num = 10..14
+    }else{
+        switch (substr($num,-1,1)) {
+            case 1:
+                $suf = $unit1;
+                break;
+            case 2:
+            case 3:
+            case 4:
+                $suf = $unit2_4;
+                break;
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            default:
+                $suf = $unit5_9;
+        };
     };
-    
+        
     
     return trim($num." ".$suf);
 }
