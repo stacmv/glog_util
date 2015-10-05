@@ -289,7 +289,7 @@ function glog_get_age_str($age){    // возвращает строку вид�
 }
 function glog_get_num_with_unit($num, $unit1="", $unit2_4="",$unit5_9=""){    // возвращает строку вида "n чего-нибудь"
     
-    if ( ($num>=10) && ( substr($num,-1,2) == 1) ){
+    if ( ($num>=10) && ( substr($num,-2,1) == 1) ){
         $suf = $unit5_9; // for num = 10..14
     }else{
         switch (substr($num,-1,1)) {
