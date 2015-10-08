@@ -103,6 +103,36 @@ function glog_isodate($date = "", $withTime = false) {				/* Принимает 
     
     if (preg_match("/\d{4}\-\d\d\-\d\d/", $date)) return $date; // дата уже в формате iso
     
+        
+    // Дата задана в русском формате
+    if (preg_match("/\d\d\.\d\d\.\d{4}/", $date)){
+        $m = (int) substr($date,3,2); $m = str_pad($m, 2, "0", STR_PAD_LEFT);
+        $d = (int) substr($date,0,2); $d = str_pad($d, 2, "0", STR_PAD_LEFT);
+        $y = (int) substr($date,6,4);
+        if (!checkdate($m,$d,$y)) {
+            return false;
+        } else {
+        
+            if ($withTime){
+                $h = substr($date,11,2); $h = str_pad($h, 2, "0", STR_PAD_LEFT);
+                $i = substr($date,14,2); $i = str_pad($i, 2, "0", STR_PAD_LEFT);
+                $s = substr($date,17,2); $s = str_pad($s, 2, "0", STR_PAD_LEFT);
+                
+                return "$y-$m-$d $h:$i:$s";
+            }else{
+                return "$y-$m-$d";
+            };
+        }; 
+    };
+    
+    // Дата задана строкой, распознаваемой PHP (http://php.net/manual/ru/datetime.formats.php)
+    if ( ! is_numeric($date) && ($ut = strtotime($date) !== false) ){ // strtotime() behavior differs from PHP 5.2 to 5.3
+        $date = $ut;
+        unset($ut);
+    };
+    
+    
+    // Дата задана меткой времени
     if ( is_numeric($date) ){ // unix timestamp
         if ($withTime){
             return date("c", $date);
@@ -111,23 +141,6 @@ function glog_isodate($date = "", $withTime = false) {				/* Принимает 
         };
     };
     
-    $m = (int) substr($date,3,2); $m = str_pad($m, 2, "0", STR_PAD_LEFT);
-    $d = (int) substr($date,0,2); $d = str_pad($d, 2, "0", STR_PAD_LEFT);
-    $y = (int) substr($date,6,4);
-    if (!checkdate($m,$d,$y)) {
-        return false;
-    } else {
-    
-        if ($withTime){
-            $h = substr($date,11,2); $h = str_pad($h, 2, "0", STR_PAD_LEFT);
-            $i = substr($date,14,2); $i = str_pad($i, 2, "0", STR_PAD_LEFT);
-            $s = substr($date,17,2); $s = str_pad($s, 2, "0", STR_PAD_LEFT);
-            
-            return "$y-$m-$d $h:$i:$s";
-        }else{
-            return "$y-$m-$d";
-        };
-    }; 
 };
 function glog_rusdate($date="", $withTime = false) {				/* Принимает дату в формате "гггг-мм-дд" и возвращает в формате "дд.мм.гггг" */
     
