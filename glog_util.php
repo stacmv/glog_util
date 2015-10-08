@@ -126,7 +126,7 @@ function glog_isodate($date = "", $withTime = false) {				/* Принимает 
     };
     
     // Дата задана строкой, распознаваемой PHP (http://php.net/manual/ru/datetime.formats.php)
-    if ( ! is_numeric($date) && ($ut = strtotime($date) !== false) ){ // strtotime() behavior differs from PHP 5.2 to 5.3
+    if ( ! is_numeric($date) && ( ($ut = strtotime($date)) !== false) ){ // strtotime() behavior differs from PHP 5.2 to 5.3
         $date = $ut;
         unset($ut);
     };
