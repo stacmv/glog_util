@@ -238,6 +238,9 @@ function glog_period($start_date="", $end_date="", $sort = "asc"){   // Возв
     
     return $dates;
 }
+function glog_date_add($date, $add_on = "+1"){
+    return glog_isodate(strtotime($add_on . " days", strtotime($date)));
+}
 
 function glog_convert_size($size_in_bytes, $lang=""){
     // source http://php.net/manual/ru/function.memory-get-usage.php#96280
