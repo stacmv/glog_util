@@ -578,8 +578,8 @@ function glog_render($template_file, array $data){
         //glog_dosyslog(__FUNCTION__.": NOTICE: Успешно применен шаблон '".$template_file."'.");
     
     }else{
-		$HTML = "<p><b>Ошибка!</b> Файл шаблона не найден".(DIAGNOSTICS_MODE || ($_SERVER["HTTP_HOST"] == "localhost") ? " - '".$template_file."'" : "")."</p>";
-            glog_dosyslog(__FUNCTION__.": ERROR: Файл шаблона не найден - '".$template_file."'.");
+		$HTML = "<p><b>Ошибка!</b> Файл шаблона не найден".(defined("DEV_MODE") && DEV_MODE ? " - '".$template_file."'" : "")."</p>";
+        glog_dosyslog(__FUNCTION__.": ERROR: Файл шаблона не найден - '".$template_file."'.");
     };
     
     return $HTML;	
