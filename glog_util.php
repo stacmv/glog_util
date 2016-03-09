@@ -1,5 +1,5 @@
 <?php
-define("LIBGLOGUTIL_VERSION", "0.19.1");
+define("LIBGLOGUTIL_VERSION", "0.20.0");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 if ( ! defined("GLOG_DEFAULT_LANG") ) define("GLOG_DEFAULT_LANG", "RU"); 
@@ -579,27 +579,33 @@ function glog_render($template_file, array $data){
             glog_dosyslog(__FUNCTION__.": ERROR: Файл шаблона пустой - '".$template_file."'.");
             $template = defined("TEMPLATE_DEFAULT") ? TEMPLATE_DEFAULT : "";
         };
-        // parse template.
-        $template = str_replace("\r\n", "\n", $template);
-        $template = str_replace("\r", "\n", $template);
         
-        // Подстановка данных
-        foreach($data as $k=>$v){
-            $template = str_replace("%%".$k."%%", $v, $template);
-        };
-            
-        $template = preg_replace("/%%[^%]+%%/","",$template); // удаляем все placeholders для которых нет данных во входных параметрах.
-        $HTML = $template;
-        //glog_dosyslog(__FUNCTION__.": NOTICE: Успешно применен шаблон '".$template_file."'.");
+        $HTML = glog_render_string($template, $data);
     
     }else{
 		$HTML = "<p><b>Ошибка!</b> Файл шаблона не найден".(defined("DEV_MODE") && DEV_MODE ? " - '".$template_file."'" : "")."</p>";
         glog_dosyslog(__FUNCTION__.": ERROR: Файл шаблона не найден - '".$template_file."'.");
     };
     
-    return $HTML;	
+    return $HTML;
 };
-
+function glog_render_string($template, array $data){
+    
+    // parse template.
+    $template = str_replace("\r\n", "\n", $template);
+    $template = str_replace("\r", "\n", $template);
+    
+    // Подстановка данных
+    foreach($data as $k=>$v){
+        $template = str_replace("%%".$k."%%", $v, $template);
+    };
+        
+    $template = preg_replace("/%%[^%]+%%/","",$template); // удаляем все placeholders для которых нет данных во входных параметрах.
+    $HTML = $template;
+    //glog_dosyslog(__FUNCTION__.": NOTICE: Успешно применен шаблон '".$template_file."'.");
+    
+    return $HTML;
+}
 function glog_str_from_num($int, $lang = GLOG_DEFAULT_LANG){  // Возвращает число прописью. ЭКСПЕРИМЕНТАЛЬНО: до 19999 и только по-русски.
     
     if ( ! is_int($int) ){
