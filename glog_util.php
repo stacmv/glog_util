@@ -3,6 +3,7 @@ define("LIBGLOGUTIL_VERSION", "0.19.1");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 if ( ! defined("GLOG_DEFAULT_LANG") ) define("GLOG_DEFAULT_LANG", "RU"); 
+if ( ! defined("GLOG_FILE_ENCODING") ) define("GLOG_FILE_ENCODING", "UTF-8"); 
 
 function glog_get_log_levels(){
     
@@ -270,6 +271,7 @@ function glog_get_age($anketaORbirthdate, $add_units = false) { 				// Возв�
         $anketa = $anketaORbirthdate;
    
         if (!empty($anketa["age_field"]) && !empty($anketa["formdata"][$anketa["age_field"]])){
+            $byear = $bmonth = $bday = "";
             $age = $anketa["formdata"][$anketa["age_field"]];    
         }else{
             if(!empty($anketa["birthdate_field"])){
@@ -440,12 +442,9 @@ function glog_file_read_as_array($file_name){
 
     return $res;
 }
-function glog_mail_create_multipart( $text, $attachment_content, $attachment_name="", $from="" ){
+function glog_mail_create_multipart( $text, array $attachments, array $attachment_cids = array(), $from="" ){
     
-    
-    if ( ! $attachment_name ) $attachment_name = "glog_attachment_" . date("YmdHis");
-    
-    
+        
     $un        = strtoupper(uniqid(time()));
     
     $headers   = "";
@@ -455,16 +454,32 @@ function glog_mail_create_multipart( $text, $attachment_content, $attachment_nam
     $headers  .= "Mime-Version: 1.0\n";
     $headers  .= "Content-Type:multipart/mixed;";
     $headers  .= "boundary=\"----------".$un."\"\n\n";
+       
+    
     
     $message   = "------------".$un."\nContent-Type:text/html;charset=" . GLOG_FILE_ENCODING . "\n";
     $message  .= "Content-Transfer-Encoding: 8bit\n\n$text\n\n";
-    $message  .= "------------".$un."\n";
-    $message  .= "Content-Type: application/octet-stream;";
-    $message  .= "name=\"".basename($attachment_name)."\"\n";
-    $message  .= "Content-Transfer-Encoding:base64\n";
-    $message  .= "Content-Disposition:attachment;";
-    $message  .= "filename=\"".basename($attachment_name)."\"\n\n";
-    $message  .= chunk_split(base64_encode( $attachment_content ))."\n";
+    
+    foreach($attachments as $attachment_name => $attachment_content){
+
+        $message  .= "------------".$un."\n";
+        if ( ! empty($attachment_cids[$attachment_name]) ){
+            $message  .= "Content-Type: ". $attachment_cids[$attachment_name] .";\n";
+            $message  .= "Content-Transfer-Encoding:base64\n";
+            $message  .= "Content-ID:<".$attachment_name.">\n\n";
+        }else{
+            $message  .= "Content-Type: application/octet-stream;";
+            $message  .= "name=\"".basename($attachment_name)."\"\n";
+            $message  .= "Content-Transfer-Encoding:base64\n";
+            $message  .= "Content-Disposition:attachment;";
+            $message  .= "filename=\"".basename($attachment_name)."\"\n\n";
+        };
+        $message  .= chunk_split(base64_encode( $attachment_content ))."\n";
+        
+    };
+    
+    $message  .= "------------".$un."--";
+    
 
     return array("message"=>$message, "headers"=> $headers);
 }
