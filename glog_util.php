@@ -1,5 +1,5 @@
 <?php
-define("LIBGLOGUTIL_VERSION", "0.20.0");
+define("LIBGLOGUTIL_VERSION", "0.21.0");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 if ( ! defined("GLOG_DEFAULT_LANG") ) define("GLOG_DEFAULT_LANG", "RU"); 
@@ -485,13 +485,13 @@ function glog_mail_create_multipart( $text, array $attachments, array $attachmen
 }
 
 
-function glog_http_get($url, $use_cache = true, $user_agent = ""){
-    return glog_http_request("GET", $url, array(), $use_cache, "", $user_agent);
+function glog_http_get($url, $use_cache = true, $user_agent = "", $other_headers = array()){
+    return glog_http_request("GET", $url, array(), $use_cache, "", $user_agent, $other_headers);
 };
-function glog_http_post($url, $data, $use_cache = true, $content_type="", $user_agent = ""){
-    return glog_http_request("POST", $url, $data, $use_cache, $content_type, $user_agent);
+function glog_http_post($url, $data, $use_cache = true, $content_type="", $user_agent = "", $other_headers = array()){
+    return glog_http_request("POST", $url, $data, $use_cache, $content_type, $user_agent, $other_headers);
 };
-function glog_http_request($method, $url, $data, $use_cache = true, $content_type = "", $user_agent = ""){ // Выполняет HTTP запрос методом $method на $url с параметрами $data
+function glog_http_request($method, $url, $data, $use_cache = true, $content_type = "", $user_agent = "", $other_headers = array()){ // Выполняет HTTP запрос методом $method на $url с параметрами $data
 
     $cache_ttl = 60*60; // 1 час
     $cache_dir = DATA_DIR . ".cache/" . __FUNCTION__ . "/";
@@ -505,17 +505,20 @@ function glog_http_request($method, $url, $data, $use_cache = true, $content_typ
     $request_id = uniqid();
     
     $method = strtoupper($method);
-    if ( ! $content_type && ( $method == "POST") ) $content_type = 'Content-type: application/x-www-form-urlencoded';
+    $headers = array();
+    if ( ! $content_type && ( $method == "POST") ) $headers["Content-type"]  = "Content-type: application/x-www-form-urlencoded";
+    
+    if ( ! empty($other_headers) ) $headers = array_merge($headers, $other_headers);
     
     if ($method == "POST") $postdata = http_build_query($data);
     
 	$opts = array('http' => array( 'method'  => $method ) );
-    if ( ! empty($content_type) ) $opts["http"]['header']     = $content_type;
+    if ( ! empty($headers) )      $opts["http"]['header']     = implode("\r\n", $headers);
     if ( ! empty($user_agent) )   $opts["http"]['user_agent'] = $user_agent;
     if ( ! empty($postdata) )     $opts["http"]['content']    = $postdata;
 
     
-    glog_dosyslog(__FUNCTION__.": NOTICE: " . $method . "-запрос " . $request_id . " на '" . $url . "'" . ( ! empty($postdata) ? " с данными '" . urldecode($postdata) . "'" : "" ) . " ... ");
+    glog_dosyslog(__FUNCTION__.": NOTICE: " . $method . "-запрос " . $request_id . " на '" . $url . "'" . ( ! empty($postdata) ? " с данными '" . urldecode($postdata) . "'" : "" ) . ( ! empty($headers) ? " Заголовки: " . implode("; ", $headers) . "." : "") . " ... ");
     
     $tries = $max_tries;
     
