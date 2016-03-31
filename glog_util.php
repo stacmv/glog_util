@@ -1,5 +1,5 @@
 <?php
-define("LIBGLOGUTIL_VERSION", "0.21.0");
+define("LIBGLOGUTIL_VERSION", "0.22.0");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 if ( ! defined("GLOG_DEFAULT_LANG") ) define("GLOG_DEFAULT_LANG", "RU"); 
@@ -442,17 +442,17 @@ function glog_file_read_as_array($file_name){
 
     return $res;
 }
-function glog_mail_create_multipart( $text, array $attachments, array $attachment_cids = array(), $from="" ){
+function glog_mail_create_multipart( $text, array $attachments, array $attachment_cids = array(), $from="", $reply_to = "" ){
     
         
     $un        = strtoupper(uniqid(time()));
     
     $headers   = "";
     if (!empty($from)) $headers .= "From: $from\n";
-    $headers  .= "X-Mailer: Glog\n";
-    if (!empty($from)) $headers .= "Reply-To: $from\n";
+    $headers  .= "X-Mailer: Glog_util\n";
+    if (!empty($reply_to)) $headers .= "Reply-To: $reply_to\n";
     $headers  .= "Mime-Version: 1.0\n";
-    $headers  .= "Content-Type:multipart/mixed;";
+    $headers  .= "Content-Type:multipart/related;";
     $headers  .= "boundary=\"----------".$un."\"\n\n";
        
     
