@@ -1,7 +1,8 @@
 <?php
-define("LIBGLOGUTIL_VERSION", "0.22.0");
+define("LIBGLOGUTIL_VERSION", "0.23.0");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
+define("GLOG_CODIFY_FUNCTION", 2); // для glog_codify: возвращает имя пригодное для функции (буквы, цифры, подчеркивание);
 if ( ! defined("GLOG_DEFAULT_LANG") ) define("GLOG_DEFAULT_LANG", "RU"); 
 if ( ! defined("GLOG_FILE_ENCODING") ) define("GLOG_FILE_ENCODING", "UTF-8"); 
 
@@ -346,6 +347,12 @@ function glog_codify($str, $flags = 0){                                      // 
         $result = strtolower($result);
         $result = urlencode($result);
         $result = str_replace("%", "_", $result);
+    }elseif($flags & GLOG_CODIFY_FUNCTION){
+        $result = preg_replace("/[^\w\d_]/","_", $result);
+        if (preg_match("/^\d/", $result)){
+            $result = "_".$result;
+        };
+        $result = strtolower($result);
     }else{
         $result = str_replace(array("+","&"," ",",",":",";",".",",","/","\\","(",")","'","\""),array("_plus_","_and_","-","-","-","-"),$result); 
         $result = strtolower($result);
