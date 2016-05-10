@@ -1,5 +1,5 @@
 <?php
-define("LIBGLOGUTIL_VERSION", "0.23.0");
+define("LIBGLOGUTIL_VERSION", "0.24.0");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FUNCTION", 2); // для glog_codify: возвращает имя пригодное для функции (буквы, цифры, подчеркивание);
@@ -756,10 +756,19 @@ function glog_str_ucfirst($str, $enc = 'utf-8') {
 } 
 // ----------------
 if (!function_exists("get_callee")){
-    function get_callee(){
-        $dbt    = debug_backtrace();
-        $callee = (!empty($dbt[2]) ? " < ".$dbt[2]["function"] : "") . (!empty($dbt[3]) ? " < ".$dbt[3]["function"] : ""); // вызывающая функция; для целей логирования.
-        return $callee;
+    function get_callee($options = true, $limit = 0){
+        $dbt    = debug_backtrace($options, $limit);
+        
+        $dbt_ = array_map(function($dbt_item){
+            $className = isset($dbt_item["class"]) ? $dbt_item["class"] : "";
+            $type = isset($dbt_item["type"]) ? $dbt_item["type"] : "";
+            $args = isset($dbt_item["args"]) ?  implode(", ", array_map(function($arg){
+                return is_scalar($arg) ? $arg : "[".gettype($arg)."]";
+            },$dbt_item["args"])) : "";
+            return $className.$type.$dbt_item["function"]."(" . $args . ")";
+        }, array_slice($dbt,2, 3));
+        
+        return " < " . implode(" < ", $dbt_); // вызывающая функция; для целей логирования.
     };
 };
 if (!function_exists("dump")){
