@@ -1,8 +1,9 @@
 <?php
-define("LIBGLOGUTIL_VERSION", "0.24.0");
+define("LIBGLOGUTIL_VERSION", "0.25.0");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FUNCTION", 2); // для glog_codify: возвращает имя пригодное для функции (буквы, цифры, подчеркивание);
+define("GLOG_RENDER_USE_FUNCTIONS", 1); // для glog_render_string: распознавать выражения типа %%caption|func%%, выполнять func при подстановке caption
 if ( ! defined("GLOG_DEFAULT_LANG") ) define("GLOG_DEFAULT_LANG", "RU"); 
 if ( ! defined("GLOG_FILE_ENCODING") ) define("GLOG_FILE_ENCODING", "UTF-8"); 
 
@@ -243,6 +244,27 @@ function glog_period($start_date="", $end_date="", $sort = "asc"){   // Возв
 }
 function glog_date_add($date, $add_on = "+1"){
     return glog_isodate(strtotime($add_on . " days", strtotime($date)));
+}
+
+function glog_time_parse($time_str){
+    
+    $m = array();
+    $res = array();
+    
+    if (preg_match("/(?:(\d?\d):)?(\d\d):(\d\d)(?:.(\d+))?/", $time_str, $m)){
+        $res["hour"] = $m[1] ? $m[1] : "00";
+        $res["minute"] = $m[2];
+        $res["second"] = $m[3];
+        $res["fraction"] = $m[4];
+        
+        return $res;
+        
+        
+    }else{
+        return false;
+    }
+    
+    
 }
 
 function glog_convert_size($size_in_bytes, $lang=""){
@@ -599,15 +621,64 @@ function glog_render($template_file, array $data){
     
     return $HTML;
 };
-function glog_render_string($template, array $data){
+function glog_render_string($template, array $data, $options = 0){
     
     // parse template.
     $template = str_replace("\r\n", "\n", $template);
     $template = str_replace("\r", "\n", $template);
     
     // Подстановка данных
-    foreach($data as $k=>$v){
-        $template = str_replace("%%".$k."%%", $v, $template);
+    if ($options && GLOG_RENDER_USE_FUNCTIONS){
+        $template = preg_replace_callback("/%%(.+)%%/u", function(array $m) use ($data){
+            $res = "";
+            if (!empty($m[1])){
+                if (strpos($m[1],"|") === false){
+                    $key = $m[1];
+                    $func = "";
+                }else{
+                    list($key, $func) = explode("|", $m[1],2);
+                };
+                if (isset($data[$key])){
+                    $res = $data[$key];
+                };
+                
+                if ($func){
+                    // Substring
+                    $matches = array();
+                    if (preg_match("/{(\d+),(\d+)}/", $func, $matches)){
+                        $res = mb_substr($res, $matches[1], $matches[2], "UTF-8");
+                    };
+                    
+                    if ($_SERVER["REMOTE_ADDR"] == "176.195.57.123"){
+                        $test = true;
+                    }else{
+                        $test = false;
+                    };
+                    
+                    switch($func){
+                        case "hour":
+                        case "minute":
+                        case "second":
+                        case "fraction";
+                            $tmp = glog_time_parse($data[$key]);
+                           
+                            $res = $tmp[$func];
+                           
+                            break;
+                        
+                    };
+                    // More functions to come... 
+                    // ...
+                };
+            };
+            return $res;
+            
+        }, $template);
+        
+    }else{
+        foreach($data as $k=>$v){
+            $template = str_replace("%%".$k."%%", $v, $template);
+        };
     };
         
     $template = preg_replace("/%%[^%]+%%/","",$template); // удаляем все placeholders для которых нет данных во входных параметрах.
