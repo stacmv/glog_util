@@ -1,5 +1,6 @@
 <?php
-define("LIBGLOGUTIL_VERSION", "0.25.0");
+/* PHP 5.4 */
+define("LIBGLOGUTIL_VERSION", "0.26.1");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FUNCTION", 2); // для glog_codify: возвращает имя пригодное для функции (буквы, цифры, подчеркивание);
@@ -20,14 +21,16 @@ function glog_get_log_levels(){
     
 }
 function glog_log_level($level=""){
-    static $log_level;
+    static $log_level = 1;
     
     $levels = glog_get_log_levels();
     
     if ( ! $level ){
+        // get
         if ( $log_level ) return $log_level;
         else return 0;
     }else{
+        // set
         $log_level = array_search($level, $levels);
     };
 }
@@ -35,7 +38,7 @@ function glog_get_msg_log_level($message){
     $levels = glog_get_log_levels();
     
     for( $i = count($levels)-1; $i>=0; $i--){
-        if ( strpos($message, $levels[$i]) > 0) return $i;
+        if ( strpos($message, $levels[$i].":") !== false) return $i;
     };
     
     return $i;
@@ -46,7 +49,7 @@ function glog_dosyslog($message) {								// Пишет сообщение в с
     
     if ( ! defined("GLOG_DO_SYSLOG")) define("GLOG_DO_SYSLOG", false);
     if ( ! defined("GLOG_DO_PROFILE")) define("GLOG_DO_PROFILE", GLOG_DO_SYSLOG);
-    
+
     if ( glog_get_msg_log_level($message) < glog_log_level() ) return false;
         
     if (GLOG_DO_SYSLOG || GLOG_DO_PROFILE){
@@ -534,12 +537,22 @@ function glog_http_request($method, $url, $data, $use_cache = true, $content_typ
     $request_id = uniqid();
     
     $method = strtoupper($method);
-    $headers = array();
-    if ( ! $content_type && ( $method == "POST") ) $headers["Content-type"]  = "Content-type: application/x-www-form-urlencoded";
+        
+    if ($method == "POST"){
+        if ( ! $content_type ) $content_type  = "application/x-www-form-urlencoded";
+        switch($content_type){
+            case "application/json":
+                $postdata = json_encode($data, JSON_UNESCAPED_UNICODE);  break;
+            case "application/x-www-form-urlencoded":
+            default:
+                $postdata = http_build_query($data);
+        }
+    } 
     
+    $headers = array();
+    $headers["Content-type"] = "Content-type: " . $content_type;
     if ( ! empty($other_headers) ) $headers = array_merge($headers, $other_headers);
     
-    if ($method == "POST") $postdata = http_build_query($data);
     
 	$opts = array('http' => array( 'method'  => $method ) );
     if ( ! empty($headers) )      $opts["http"]['header']     = implode("\r\n", $headers);
@@ -565,7 +578,10 @@ function glog_http_request($method, $url, $data, $use_cache = true, $content_typ
         $context = stream_context_create($opts);
         
         while ( ! ( $response = @file_get_contents($url , false, $context) ) && ($tries--) ){
-            if ( ! $response ) sleep( $sleep_coef * ($max_tries-$tries));
+            if ( ! $response ){
+                dosyslog(__FUNCTION__.": WARNING: Empty response for ".$request_id."." . (!empty($http_response_header) ? " HTTP headers: ".json_encode($http_response_header) : ""));
+                sleep( $sleep_coef * ($max_tries-$tries));
+            };
         };            
         glog_dosyslog(__FUNCTION__.": NOTICE: Отправлен " . $method . "-запрос " . $request_id . " на '" . $url . "' ... " . ($response === false ? "ERROR" : "OK"));
         if ( ! empty($postdata) ) glog_dosyslog(__FUNCTION__.": NOTICE: " . $request_id . " POST-данные: '".$postdata."'.");
@@ -841,6 +857,11 @@ if (!function_exists("get_callee")){
         
         return " < " . implode(" < ", $dbt_); // вызывающая функция; для целей логирования.
     };
+};
+if (!function_exists("dosyslog")){
+    function dosyslog($message){
+        return glog_dosyslog($message);
+    }
 };
 if (!function_exists("dump")){
     function dump($var, $title="") {						// Печатает дамп переменной, окруженной тегами PRE
