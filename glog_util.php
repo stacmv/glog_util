@@ -441,6 +441,7 @@ function glog_file_read($file_name, $title="" ){
     
     if (file_exists($file_name)){
         $res = @file_get_contents($file_name);
+        $res = ltrim($res, "\xEF\xBB\xBF"); // избавляемся от BOM, если кодировка файла UTF-8-BOM
         
         if ( ! $res ){
             if ($res === ""){
