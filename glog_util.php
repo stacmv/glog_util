@@ -1,8 +1,9 @@
 <?php
 /* PHP 5.4 */
-define("LIBGLOGUTIL_VERSION", "0.26.1");
+define("LIBGLOGUTIL_VERSION", "0.26.2");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
+define("GLOG_CODIFY_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FUNCTION", 2); // для glog_codify: возвращает имя пригодное для функции (буквы, цифры, подчеркивание);
 define("GLOG_RENDER_USE_FUNCTIONS", 1); // для glog_render_string: распознавать выражения типа %%caption|func%%, выполнять func при подстановке caption
 if ( ! defined("GLOG_DEFAULT_LANG") ) define("GLOG_DEFAULT_LANG", "RU"); 
@@ -367,8 +368,8 @@ function glog_codify($str, $flags = 0){                                      // 
     
     $result = glog_translit($str);
     
-    if ($flags & GLOG_GET_FILENAME){
-        $result = str_replace(array("%", "!","?","+","&"," ",",",":",";",".",",","/","\\","(",")","'","\""),array("_percent", "_excl_", "_quest_", "_plus_","_and_","_","-","-","-"),$result); 
+    if ($flags & (GLOG_GET_FILENAME || GLOG_CODIFY_FILENAME)){
+        $result = str_replace(array("%", "!","?","+","&"," ",",",":",";",",","/","\\","(",")","'","\""),array("_percent", "_excl_", "_quest_", "_plus_","_and_","_","-","-","-"),$result); 
         $result = strtolower($result);
         $result = urlencode($result);
         $result = str_replace("%", "_", $result);
