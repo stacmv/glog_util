@@ -1,6 +1,6 @@
 <?php
 /* PHP 5.4 */
-define("LIBGLOGUTIL_VERSION", "0.26.2");
+define("LIBGLOGUTIL_VERSION", "0.27.0");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
@@ -683,6 +683,8 @@ function glog_render_string($template, array $data, $options = 0){
                             $res = $tmp[$func];
                            
                             break;
+                        case "CP1251":
+                            $res = iconv("UTF8","CP1251", $data[$key]);
                         
                     };
                     // More functions to come... 
