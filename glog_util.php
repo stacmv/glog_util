@@ -1,6 +1,6 @@
 <?php
 /* PHP 5.4 */
-define("LIBGLOGUTIL_VERSION", "0.28.0");
+define("LIBGLOGUTIL_VERSION", "0.29.0");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
@@ -877,4 +877,19 @@ if (!function_exists("dump")){
         };
     };
 };
+if (!function_exists("return_btytes")){
+    function return_bytes($val) {  // http://php.net/manual/ru/function.ini-get.php
+        $val = trim($val);
+        $last = strtolower($val[strlen($val)-1]);
+        switch($last) {
+            case 'g':
+                $val *= 1024;
+            case 'm':
+                $val *= 1024;
+            case 'k':
+                $val *= 1024;
+        }
+        return $val;
+    }
+}
 // ----------------
