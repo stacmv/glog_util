@@ -1,6 +1,6 @@
 <?php
 /* PHP 5.4 */
-define("LIBGLOGUTIL_VERSION", "0.29.0");
+define("LIBGLOGUTIL_VERSION", "0.30.0");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
@@ -425,7 +425,11 @@ function glog_show_array_count($arr, $sort=true){
 }
 
 function glog_show_phone($phone_cleared){ 						    // Форматирует номер телефона (только цифры) к  виду (123) 456-78-90
-	return "(" . substr($phone_cleared, 0, 3) . ") " . substr($phone_cleared, 3, 3) . "-" . substr($phone_cleared, 6, 2) . "-" . substr($phone_cleared, 8, 3);
+    if (substr($phone_cleared, -10, 1) == "9") { // корректно указанный мобильный телефон
+        return "(" . substr($phone_cleared, -10, 3) . ") " . substr($phone_cleared, -7, 3) . "-" . substr($phone_cleared, -4, 2) . "-" . substr($phone_cleared, -2, 2);
+    }else{
+        return $phone_cleared;
+    }
 }
 function glog_clear_phone($phone){                              	// возвращает телефон в формате 9031234567 - только цифры
 	$phone_cleared = "";
@@ -539,7 +543,7 @@ function glog_http_request($method, $url, $data, $use_cache = true, $content_typ
     $request_id = uniqid();
     
     $method = strtoupper($method);
-        
+    
     if ($method == "POST"){
         if ( ! $content_type ) $content_type  = "application/x-www-form-urlencoded";
         switch($content_type){
@@ -696,9 +700,9 @@ function glog_render_string($template, array $data, $options = 0){
         }, $template);
         
     }else{
-        foreach($data as $k=>$v){
-            $template = str_replace("%%".$k."%%", $v, $template);
-        };
+    foreach($data as $k=>$v){
+        $template = str_replace("%%".$k."%%", $v, $template);
+    };
     };
         
     $template = preg_replace("/%%[^%]+%%/","",$template); // удаляем все placeholders для которых нет данных во входных параметрах.
