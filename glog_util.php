@@ -1,6 +1,6 @@
 <?php
 /* PHP 5.4 */
-define("LIBGLOGUTIL_VERSION", "0.30.0");
+define("LIBGLOGUTIL_VERSION", "0.31.0");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
@@ -44,9 +44,13 @@ function glog_get_msg_log_level($message){
     
     return $i;
 }
-function glog_dosyslog($message) {								// Пишет сообщение в системный лог при включенной опции GLOG_DO_SYSLOG.
+function glog_dosyslog($message, $flush = false) {								// Пишет сообщение в системный лог при включенной опции GLOG_DO_SYSLOG.
     static $last_invokation_time;
     static $last_memory_usage;
+
+    static $buffer = array();
+
+    static $buffer_size = 100; // items
     
     if ( ! defined("GLOG_DO_SYSLOG")) define("GLOG_DO_SYSLOG", false);
     if ( ! defined("GLOG_DO_PROFILE")) define("GLOG_DO_PROFILE", GLOG_DO_SYSLOG);
@@ -81,20 +85,33 @@ function glog_dosyslog($message) {								// Пишет сообщение в с
             $message,
         );
            
+        
+        // Настройка размера буфера в зависимости от продолжительности обработки запроса
+        if ($request_time_change > 10) $buffer_size = 10;
+        if ($request_time_change > 20) $buffer_size = 1; // Уменьшаем размер буфера, чтобы не потерять данные, если скрипт прервется сервером.
+        if ($flush)                    $buffer_size = 1;
+
                
         $str = implode("\t", $data) . "\n";
         
-        if (file_put_contents(GLOG_SYSLOG, $str, FILE_APPEND) === false) {
-            $Subject = "Error in ".$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'];
-            $extraheader = "Content-type: text/plain; charset=UTF-8";
-            $message= "Can not write data to log file '".GLOG_SYSLOG."'!\nUnsaved data:\n".$message."\n";
-            if ($_SERVER["HTTP_HOST"] == "localhost"){
-                die("Code: ".__FUNCTION__."-".__LINE__."- \"".$subject." - ".$message."\"");
-            }else{
-                mail(EMAIL,$Subject,$message,$extraheader);
+        $buffer[] = $str;
+        if (count($buffer) >= $buffer_size){
+            // flush buffer;
+            if ($buffer_size>1) $buffer[] = "Buffer flushed.\n";
+        
+            if (file_put_contents(GLOG_SYSLOG, implode("", $buffer), FILE_APPEND) === false) {
+                $Subject = "Error in ".$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'];
+                $extraheader = "Content-type: text/plain; charset=UTF-8";
+                $message= "Can not write data to log file '".GLOG_SYSLOG."'!\nUnsaved data:\n".$message."\n";
+                if ($_SERVER["HTTP_HOST"] == "localhost"){
+                    die("Code: ".__FUNCTION__."-".__LINE__."- \"".$subject." - ".$message."\"");
+                }else{
+                    mail(EMAIL,$Subject,$message,$extraheader);
+                };
+                return false;
             };
-            
-            return false;
+
+            $buffer = array();
         };
 
         $last_invokation_time = $invokation_time;
@@ -651,7 +668,8 @@ function glog_render_string($template, array $data, $options = 0){
     
     // Подстановка данных
     if ($options && GLOG_RENDER_USE_FUNCTIONS){
-        $template = preg_replace_callback("/%%(.+)%%/u", function(array $m) use ($data){
+        $template = preg_replace_callback("/%%(.+?)%%/u", function(array $m) use ($data){
+
             $res = "";
             if (!empty($m[1])){
                 if (strpos($m[1],"|") === false){
@@ -867,8 +885,8 @@ if (!function_exists("get_callee")){
     };
 };
 if (!function_exists("dosyslog")){
-    function dosyslog($message){
-        return glog_dosyslog($message);
+    function dosyslog($message, $flush=false){
+        return glog_dosyslog($message, $flush);
     }
 };
 if (!function_exists("dump")){
