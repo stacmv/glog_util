@@ -207,9 +207,9 @@ function glog_rusdate($date="", $withTime = false) {				/* Принимает д
 };
 function glog_weekday($day_no="", $short = false, $lang = GLOG_DEFAULT_LANG){                                 // Возвращает наименгование для недели по его номеру (0 - вс, 6 - сб )
 
-    $day_names = glog_weekdays($lang);
+    $day_names = glog_weekdays($short, $lang);
 
-    if ( ! $day_no){
+    if ( $day_no === ""){
         $day_no = date("w");
     };
 
@@ -723,9 +723,11 @@ function glog_render_string($template, array $data, $options = 0){
         }, $template);
 
     }else{
-    foreach($data as $k=>$v){
-        $template = str_replace("%%".$k."%%", $v, $template);
-    };
+      foreach($data as $k=>$v){
+        if (is_string($v)){
+            $template = str_replace("%%".$k."%%", $v, $template);
+        };
+      };
     };
 
     $template = preg_replace("/%%[^%]+%%/","",$template); // удаляем все placeholders для которых нет данных во входных параметрах.
