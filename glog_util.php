@@ -1,10 +1,11 @@
 <?php
 /* PHP 5.4 */
-define("LIBGLOGUTIL_VERSION", "0.31.1");
+define("LIBGLOGUTIL_VERSION", "0.32.0");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FUNCTION", 2); // для glog_codify: возвращает имя пригодное для функции (буквы, цифры, подчеркивание);
+define("GLOG_CODIFY_STRIP_ESCAPED", 4); // для glog_codify: вырезает символы, которые после url-кодирования представлены своими кодами (%0C и т.п.); флаг используется вместе с GLOG_CODIFY_FILENAME
 define("GLOG_RENDER_USE_FUNCTIONS", 1); // для glog_render_string: распознавать выражения типа %%caption|func%%, выполнять func при подстановке caption
 if ( ! defined("GLOG_DEFAULT_LANG") ) define("GLOG_DEFAULT_LANG", "RU");
 if ( ! defined("GLOG_FILE_ENCODING") ) define("GLOG_FILE_ENCODING", "UTF-8");
@@ -206,9 +207,9 @@ function glog_rusdate($date="", $withTime = false) {				/* Принимает д
 };
 function glog_weekday($day_no="", $short = false, $lang = GLOG_DEFAULT_LANG){                                 // Возвращает наименгование для недели по его номеру (0 - вс, 6 - сб )
 
-    $day_names = glog_weekdays($short, $lang);
+    $day_names = glog_weekdays($lang);
 
-    if ( $day_no === ""){
+    if ( ! $day_no){
         $day_no = date("w");
     };
 
@@ -389,7 +390,11 @@ function glog_codify($str, $flags = 0){                                      // 
         $result = str_replace(array("%", "!","?","+","&"," ",",",":",";",",","/","\\","(",")","'","\""),array("_percent", "_excl_", "_quest_", "_plus_","_and_","_","-","-","-"),$result);
         $result = strtolower($result);
         $result = urlencode($result);
-        $result = str_replace("%", "_", $result);
+        if ($flags & GLOG_CODIFY_STRIP_ESCAPED){
+            $result = preg_replace("/%[A-Z0-9]{2}/","", $result);
+        }else{
+            $result = str_replace("%", "_", $result);
+        };
     }elseif($flags & GLOG_CODIFY_FUNCTION){
         $result = preg_replace("/[^\w\d_]/","_", $result);
         if (preg_match("/^\d/", $result)){
@@ -718,11 +723,9 @@ function glog_render_string($template, array $data, $options = 0){
         }, $template);
 
     }else{
-      foreach($data as $k=>$v){
-        if (is_string($v)){
-            $template = str_replace("%%".$k."%%", $v, $template);
-        };
-      };
+    foreach($data as $k=>$v){
+        $template = str_replace("%%".$k."%%", $v, $template);
+    };
     };
 
     $template = preg_replace("/%%[^%]+%%/","",$template); // удаляем все placeholders для которых нет данных во входных параметрах.
@@ -901,7 +904,7 @@ if (!function_exists("dump")){
         };
     };
 };
-if (!function_exists("return_btytes")){
+if (!function_exists("return_bytes")){
     function return_bytes($val) {  // http://php.net/manual/ru/function.ini-get.php
         $val = trim($val);
         $last = strtolower($val[strlen($val)-1]);
