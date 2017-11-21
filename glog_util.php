@@ -1,6 +1,6 @@
 <?php
 /* PHP 5.4 */
-define("LIBGLOGUTIL_VERSION", "0.32.0");
+define("LIBGLOGUTIL_VERSION", "0.32.1");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
@@ -724,7 +724,7 @@ function glog_render_string($template, array $data, $options = 0){
 
     }else{
       foreach($data as $k=>$v){
-        if (is_string($v)){
+        if (is_scalar($v)){
             $template = str_replace("%%".$k."%%", $v, $template);
         };
       };
