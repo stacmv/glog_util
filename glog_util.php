@@ -1,6 +1,6 @@
 <?php
 /* PHP 5.4 */
-define("LIBGLOGUTIL_VERSION", "0.32.1");
+define("LIBGLOGUTIL_VERSION", "0.33.0");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
@@ -205,6 +205,34 @@ function glog_rusdate($date="", $withTime = false) {				/* Принимает д
         }
     };
 };
+function glog_month_name($month_num, $genitive = false){
+    $month_name = "";
+
+    if (!is_int($month_num)){ // period = 2017-04
+        $m = array();
+        if (preg_match("/(\d{4})\-(\d\d)/", $month_num, $m)){
+            $year = $m[1];
+            $month_num = $m[2];
+        };
+    };
+
+    switch( (int) $month_num){
+        case "1":  $month_name = $genitive ? "января"   : "январь"; break;
+        case "2":  $month_name = $genitive ? "февраля"  : "февраль"; break;
+        case "3":  $month_name = $genitive ? "марта"    : "март"; break;
+        case "4":  $month_name = $genitive ? "апреля"   : "апрель"; break;
+        case "5":  $month_name = $genitive ? "мая"      : "май"; break;
+        case "6":  $month_name = $genitive ? "июня"     : "июнь"; break;
+        case "7":  $month_name = $genitive ? "июля"     : "июль"; break;
+        case "8":  $month_name = $genitive ? "августа"  : "август"; break;
+        case "9":  $month_name = $genitive ? "сентября" : "сентябрь"; break;
+        case "10": $month_name = $genitive ? "октября"  : "октябрь"; break;
+        case "11": $month_name = $genitive ? "ноября"   : "ноябрь"; break;
+        case "12": $month_name = $genitive ? "декабря"  : "декабрь"; break;
+    }
+
+    return $month_name . (isset($year) ? " ".$year : "");
+}
 function glog_weekday($day_no="", $short = false, $lang = GLOG_DEFAULT_LANG){                                 // Возвращает наименгование для недели по его номеру (0 - вс, 6 - сб )
 
     $day_names = glog_weekdays($short, $lang);
