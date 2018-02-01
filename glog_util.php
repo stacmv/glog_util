@@ -1,6 +1,6 @@
 <?php
 /* PHP 5.4 */
-define("LIBGLOGUTIL_VERSION", "0.33.0");
+define("LIBGLOGUTIL_VERSION", "0.33.1");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
@@ -205,7 +205,7 @@ function glog_rusdate($date="", $withTime = false) {				/* Принимает д
         }
     };
 };
-function glog_month_name($month_num, $genitive = false){
+function glog_month_name($month_num, $options = false){
     $month_name = "";
 
     if (!is_int($month_num)){ // period = 2017-04
@@ -215,6 +215,10 @@ function glog_month_name($month_num, $genitive = false){
             $month_num = $m[2];
         };
     };
+    
+    $genitive = strpos($options, "genitative") !== false;
+    $short = strpos($options, "short") !== false;
+    
 
     switch( (int) $month_num){
         case "1":  $month_name = $genitive ? "января"   : "январь"; break;
@@ -230,6 +234,8 @@ function glog_month_name($month_num, $genitive = false){
         case "11": $month_name = $genitive ? "ноября"   : "ноябрь"; break;
         case "12": $month_name = $genitive ? "декабря"  : "декабрь"; break;
     }
+    
+    if ($short) $month_name = substr($month_name, 0,3);
 
     return $month_name . (isset($year) ? " ".$year : "");
 }
