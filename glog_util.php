@@ -1,6 +1,6 @@
 <?php
 /* PHP 5.4 */
-define("LIBGLOGUTIL_VERSION", "0.33.1");
+define("LIBGLOGUTIL_VERSION", "0.33.2");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
@@ -235,7 +235,7 @@ function glog_month_name($month_num, $options = false){
         case "12": $month_name = $genitive ? "декабря"  : "декабрь"; break;
     }
     
-    if ($short) $month_name = substr($month_name, 0,3);
+    if ($short) $month_name = mb_substr($month_name, 0,3, "UTF-8");
 
     return $month_name . (isset($year) ? " ".$year : "");
 }
