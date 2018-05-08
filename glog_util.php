@@ -1,6 +1,6 @@
 <?php
 /* PHP 5.4 */
-define("LIBGLOGUTIL_VERSION", "0.33.2");
+define("LIBGLOGUTIL_VERSION", "0.33.3");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
@@ -56,8 +56,13 @@ function glog_dosyslog($message, $flush = false) {								// Пишет сооб
     if ( ! defined("GLOG_DO_SYSLOG")) define("GLOG_DO_SYSLOG", false);
     if ( ! defined("GLOG_DO_PROFILE")) define("GLOG_DO_PROFILE", GLOG_DO_SYSLOG);
 
-    if ( glog_get_msg_log_level($message) < glog_log_level() ) return false;
-
+    $level = glog_get_msg_log_level($message);
+    if ( $level < glog_log_level() ) return false;
+    
+    if ( $level >= 3) { // WARNING и выше
+        $flush = true;
+    }
+    
     if (GLOG_DO_SYSLOG || GLOG_DO_PROFILE){
         if ( ! defined("GLOG_SYSLOG") ){
             die("Code: ".__FUNCTION__."-".__LINE__."-GLOG_SYSLOG");
