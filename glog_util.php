@@ -1,9 +1,10 @@
 <?php
 /* PHP 5.4 */
-define("LIBGLOGUTIL_VERSION", "0.33.3");
+define("LIBGLOGUTIL_VERSION", "0.34.0");
 
 define("GLOG_GET_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
 define("GLOG_CODIFY_FILENAME", 1); // для glog_codify: режим совместимости со старой функцией get_filename();
+define("GLOG_CODIFY_PATH", 8);     // для glog_codify: возвращает допустимый относительный путь с обратными слэшами (/) в качестве разделителя и с обратным слэшем в конце;
 define("GLOG_CODIFY_FUNCTION", 2); // для glog_codify: возвращает имя пригодное для функции (буквы, цифры, подчеркивание);
 define("GLOG_CODIFY_STRIP_ESCAPED", 4); // для glog_codify: вырезает символы, которые после url-кодирования представлены своими кодами (%0C и т.п.); флаг используется вместе с GLOG_CODIFY_FILENAME
 define("GLOG_RENDER_USE_FUNCTIONS", 1); // для glog_render_string: распознавать выражения типа %%caption|func%%, выполнять func при подстановке caption
@@ -58,7 +59,7 @@ function glog_dosyslog($message, $flush = false) {								// Пишет сооб
 
     $level = glog_get_msg_log_level($message);
     if ( $level < glog_log_level() ) return false;
-    
+
     if ( $level >= 3) { // WARNING и выше
         $flush = true;
     }
@@ -220,10 +221,10 @@ function glog_month_name($month_num, $options = false){
             $month_num = $m[2];
         };
     };
-    
+
     $genitive = strpos($options, "genitative") !== false;
     $short = strpos($options, "short") !== false;
-    
+
 
     switch( (int) $month_num){
         case "1":  $month_name = $genitive ? "января"   : "январь"; break;
@@ -239,7 +240,7 @@ function glog_month_name($month_num, $options = false){
         case "11": $month_name = $genitive ? "ноября"   : "ноябрь"; break;
         case "12": $month_name = $genitive ? "декабря"  : "декабрь"; break;
     }
-    
+
     if ($short) $month_name = mb_substr($month_name, 0,3, "UTF-8");
 
     return $month_name . (isset($year) ? " ".$year : "");
@@ -425,10 +426,24 @@ function glog_codify($str, $flags = 0){                                      // 
 
     $result = glog_translit($str);
 
-    if ($flags & (GLOG_GET_FILENAME || GLOG_CODIFY_FILENAME)){
-        $result = str_replace(array("%", "!","?","+","&"," ",",",":",";",",","/","\\","(",")","'","\""),array("_percent", "_excl_", "_quest_", "_plus_","_and_","_","-","-","-"),$result);
+    if (($flags & GLOG_CODIFY_FILENAME) || ($flags & GLOG_CODIFY_PATH)){
+        $result = str_replace(
+          array("%", "!","?","+","&"," ",",",":",";",",","(",")","'","\""),
+          array("_percent", "_excl_", "_quest_", "_plus_","_and_","_","-","-","-"),$result
+        );
+
+        if ($flags & GLOG_CODIFY_PATH){
+          $result = str_replace("\\", "/", $result); // пропускаем обратный слэш и прямой заменяем на обратный
+          $result = implode("/", array_map("urlencode", explode("/", $result)));
+          if (substr($result,-1) != "/"){
+            $result .= "/";
+          };
+        }else{
+          $result = str_replace(array("\\","/"), "_", $result);
+          $result = urlencode($result);
+        }
+
         $result = strtolower($result);
-        $result = urlencode($result);
         if ($flags & GLOG_CODIFY_STRIP_ESCAPED){
             $result = preg_replace("/%[A-Z0-9]{2}/","", $result);
         }else{
