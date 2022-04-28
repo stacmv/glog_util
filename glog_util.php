@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpUnused */
 
 const LIBGLOGUTIL_VERSION = "8.0.0";
 const GLOG_GET_FILENAME = 1; // для glog_codify: режим совместимости со старой функцией get_filename();
@@ -13,10 +13,8 @@ if (!defined("GLOG_DEFAULT_LANG")) {
 if (!defined("GLOG_FILE_ENCODING")) {
   define("GLOG_FILE_ENCODING", "UTF-8");
 }
-if (!defined("EMAIL")) {
-  throw new Exception('EMAIL constant is not defined.');
-}
 if (!defined("DATA_DIR")) {
+    /** @noinspection PhpUnhandledExceptionInspection */
   throw new Exception('DATA_DIR constant is not defined.');
 }
 
@@ -31,7 +29,7 @@ function glog_get_log_levels(): array {
   ];
 }
 
-function glog_log_level(int $level = null): int {
+function glog_log_level(string $level = null): int {
   static $log_level = 1;
 
   $levels = glog_get_log_levels();
@@ -61,10 +59,15 @@ function glog_get_msg_log_level($message): int {
   return $i;
 }
 
-function glog_dosyslog(
-  $message,
-  $flush = false
-) {                // Пишет сообщение в системный лог при включенной опции GLOG_DO_SYSLOG.
+/**
+ *  Пишет сообщение в системный лог при включенной опции GLOG_DO_SYSLOG
+ *
+ * @param $message
+ * @param $flush
+ * @return bool|void
+ *
+ */
+function glog_dosyslog($message, $flush = false) {
   static $last_invocation_time;
   static $last_memory_usage;
 
@@ -89,6 +92,10 @@ function glog_dosyslog(
   }
 
   if (GLOG_DO_SYSLOG || GLOG_DO_PROFILE) {
+    if (!defined("EMAIL")) {
+      /** @noinspection PhpUnhandledExceptionInspection */
+      throw new Exception('EMAIL constant is not defined.');
+    }
     if (!defined("GLOG_SYSLOG")) {
       die("Code: " . __FUNCTION__ . "-" . __LINE__ . "-GLOG_SYSLOG");
     }
@@ -196,8 +203,7 @@ function glog_isodate(string $date = "", bool $withTime = false) {
     $y = (int)substr($date, 6, 4);
     if (!checkdate($m, $d, $y)) {
       return false;
-    } else {
-      if ($withTime) {
+    } elseif ($withTime) {
         $h = substr($date, 11, 2);
         $h = str_pad($h, 2, "0", STR_PAD_LEFT);
         $i = substr($date, 14, 2);
@@ -209,7 +215,7 @@ function glog_isodate(string $date = "", bool $withTime = false) {
       } else {
         return "$y-$m-$d";
       }
-    }
+
   }
 
   // Дата задана строкой, распознаваемой PHP (http://php.net/manual/ru/datetime.formats.php)
@@ -259,29 +265,24 @@ function glog_rusdate(
   $y = (int)substr($date, 0, 4);
   if (!checkdate($m, $d, $y)) {
     return false;
-  } else {
-    if ($withTime) {
+  } elseif ($withTime) {
+      $h = substr($date, 11, 2);
+      $h = str_pad($h, 2, "0", STR_PAD_LEFT);
+      $i = substr($date, 14, 2);
+      $i = str_pad($i, 2, "0", STR_PAD_LEFT);
       if (strlen(substr($date, 11)) == 4) { // время без секунд
-        $h = substr($date, 11, 2);
-        $h = str_pad($h, 2, "0", STR_PAD_LEFT);
-        $i = substr($date, 14, 2);
-        $i = str_pad($i, 2, "0", STR_PAD_LEFT);
 
-        return "$d.$m.$y $h:$i";
+          return "$d.$m.$y $h:$i";
       } else {
-        $h = substr($date, 11, 2);
-        $h = str_pad($h, 2, "0", STR_PAD_LEFT);
-        $i = substr($date, 14, 2);
-        $i = str_pad($i, 2, "0", STR_PAD_LEFT);
-        $s = substr($date, 17, 2);
+          $s = substr($date, 17, 2);
         $s = str_pad($s, 2, "0", STR_PAD_LEFT);
 
         return "$d.$m.$y $h:$i:$s";
       }
-    } else {
-      return "$d.$m.$y";
-    }
-  }
+} else {
+  return "$d.$m.$y";
+}
+
 }
 
 /**
@@ -374,6 +375,7 @@ function glog_weekday(int $day_no = null, bool $short = false, string $lang = GL
   }
 }
 
+/** @noinspection PhpUnusedParameterInspection */
 function glog_weekdays(bool $short = false, string $lang = GLOG_DEFAULT_LANG): array {
   if ($short) {
     return [
@@ -482,8 +484,7 @@ function glog_get_age(
     if (!empty($anketa["age_field"]) && !empty($anketa["formdata"][$anketa["age_field"]])) {
       $byear = $bmonth = $bday = "";
       $age = $anketa["formdata"][$anketa["age_field"]];
-    } else {
-      if (!empty($anketa["birthdate_field"])) {
+    } elseif (!empty($anketa["birthdate_field"])) {
         $birthdate = @$anketa["formdata"][$anketa["birthdate_field"]];
         $byear = @substr($birthdate, 0, 4);
         $bmonth = @substr($birthdate, 5, 2);
@@ -492,7 +493,7 @@ function glog_get_age(
         $byear = @$anketa["formdata"][$anketa["birth_year_field"]];
         $bmonth = @$anketa["formdata"][$anketa["birth_month_field"]];
         $bday = @$anketa["formdata"][$anketa["birth_day_field"]];
-      }
+
     }
   }
 
@@ -723,7 +724,8 @@ function glog_translit($s): array|string {
   $result = str_replace(["ж", "ц", "ч", "ш", "щ", "ю", "я", "ъ", "ь"],
     ["zh", "ts", "ch", "sh", "sch", "yu", "ya"],
     $result);
-  $result = str_replace(["Ж", "Ц", "Ч", "Ш", "Щ", "Ю", "Я", "Ъ", "Ь"],
+    /** @noinspection PhpUnnecessaryLocalVariableInspection */
+    $result = str_replace(["Ж", "Ц", "Ч", "Ш", "Щ", "Ю", "Я", "Ъ", "Ь"],
     ["ZH", "TS", "CH", "SH", "SCH", "YU", "YA"],
     $result);
 
@@ -960,14 +962,12 @@ function glog_http_request($method, $url, $data, bool $use_cache = true, string 
     $context = stream_context_create($opts);
 
     while (!($response = @file_get_contents($url, false, $context)) && ($tries--)) {
-      if (!$response) {
         dosyslog(
           __FUNCTION__ . ": WARNING: Empty response for " . $request_id . "." . (!empty($http_response_header) ? " HTTP headers: " . json_encode(
               $http_response_header
             ) : "")
         );
         sleep($sleep_coef * ($max_tries - $tries));
-      }
     }
     glog_dosyslog(
       __FUNCTION__ . ": NOTICE: Отправлен " . $method . "-запрос " . $request_id . " на '" . $url . "' ... " . ($response === false ? "ERROR" : "OK")
@@ -1084,7 +1084,8 @@ function glog_render_string(string $template, array $data, int $options = 0): st
     }
   }
 
-  $template = preg_replace(
+    /** @noinspection PhpUnnecessaryLocalVariableInspection */
+    $template = preg_replace(
     "/%%[^%]+%%/",
     "",
     $template
@@ -1304,7 +1305,8 @@ function glog_str_from_num(
     }
   }
 
-  $str = implode(" ", array_reverse($tmp));
+    /** @noinspection PhpUnnecessaryLocalVariableInspection */
+    $str = implode(" ", array_reverse($tmp));
 
   return $str;
 }
